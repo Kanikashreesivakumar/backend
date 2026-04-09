@@ -4,8 +4,9 @@ const db = require("../db");
 
 // GET all expenses
 router.get("/", (req, res) => {
-  db.query("SELECT * FROM expenses", (err, result) => {
+  db.query("SELECT * FROM expenses ORDER BY id DESC", (err, result) => {
     if (err) {
+      console.error("Error fetching expenses:", err);
       res.status(500).send(err);
     } else {
       res.json(result);
@@ -22,12 +23,31 @@ router.post("/", (req, res) => {
     [title, amount],
     (err, result) => {
       if (err) {
+        console.error("Error adding expense:", err);
         res.status(500).send(err);
       } else {
-        res.json({ message: "Expense added successfully ✅" });
+        res.json({ message: "Expense added successfully ✅", id: result.insertId });
       }
     }
   );
+});
+
+// DELETE expense
+router.delete("/:id", (req, res) => {
+  const { id } = req.params;
+
+  db.query("DELETE FROM expenses WHERE id = ?", [id], (err, result) => {
+    if (err) {
+      console.error("Error deleting expense:", err);
+      res.status(500).send(err);
+    } else {
+      if (result.affectedRows === 0) {
+        res.status(404).json({ message: "Expense not found" });
+      } else {
+        res.json({ message: "Expense deleted successfully 🗑️" });
+      }
+    }
+  });
 });
 
 module.exports = router;
