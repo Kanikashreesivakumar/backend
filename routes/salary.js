@@ -1,10 +1,15 @@
 const express = require("express");
 const router = express.Router();
 const db = require("../db");
+const auth = require("../middleware/authMiddleware");
 
-// GET salary
+// Require authentication for all salary routes
+router.use(auth);
+
+// GET only user's salary
 router.get("/", (req, res) => {
-  db.query("SELECT amount FROM salary LIMIT 1", (err, result) => {
+  const userId = req.user.id;
+  db.query("SELECT amount FROM salary WHERE user_id = ? LIMIT 1", [userId], (err, result) => {
     if (err) {
       console.error("Error fetching salary:", err);
       return res.status(500).send(err);
@@ -13,20 +18,21 @@ router.get("/", (req, res) => {
   });
 });
 
-// SET salary
+// SET or UPDATE user's salary
 router.post("/", (req, res) => {
   const { amount } = req.body;
+  const userId = req.user.id;
 
-  // Try to update existing salary
-  db.query("UPDATE salary SET amount = ?", [amount], (err, result) => {
+  // Try to update existing salary for this user
+  db.query("UPDATE salary SET amount = ? WHERE user_id = ?", [amount, userId], (err, result) => {
     if (err) {
       console.error("Error updating salary:", err);
       return res.status(500).send(err);
     }
 
-    // If no row exists, insert it
+    // If no row exists for this user, insert it
     if (result.affectedRows === 0) {
-      db.query("INSERT INTO salary (amount) VALUES (?)", [amount], (err) => {
+      db.query("INSERT INTO salary (amount, user_id) VALUES (?, ?)", [amount, userId], (err) => {
         if (err) {
           console.error("Error inserting salary:", err);
           return res.status(500).send(err);
