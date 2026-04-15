@@ -7,9 +7,11 @@ app.use(express.json());
 
 const expenseRoutes = require("./routes/expenses");
 const salaryRoutes = require("./routes/salary");
+const authRoutes = require("./routes/auth");
 
 app.use("/expenses", expenseRoutes);
 app.use("/salary", salaryRoutes);
+app.use("/auth", authRoutes);
 
 app.get("/", (req, res) => {
   res.send("Backend is running 🚀");
