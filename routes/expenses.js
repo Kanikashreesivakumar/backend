@@ -57,4 +57,28 @@ router.delete("/:id", (req, res) => {
   });
 });
 
+// UPDATE only user's own expense
+router.put("/:id", (req, res) => {
+  const { id } = req.params;
+  const { title, amount } = req.body;
+  const userId = req.user.id;
+
+  db.query(
+    "UPDATE expenses SET title = ?, amount = ? WHERE id = ? AND user_id = ?",
+    [title, amount, id, userId],
+    (err, result) => {
+      if (err) {
+        console.error("Error updating expense:", err);
+        res.status(500).send(err);
+      } else {
+        if (result.affectedRows === 0) {
+          res.status(404).json({ message: "Expense not found or unauthorized" });
+        } else {
+          res.json({ message: "Expense updated successfully 🔄" });
+        }
+      }
+    }
+  );
+});
+
 module.exports = router;
